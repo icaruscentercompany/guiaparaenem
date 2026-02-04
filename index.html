@@ -8,22 +8,58 @@
     <meta name="theme-color" content="#2563eb" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel Code com Conversions API -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '2375128242957578');
-    fbq('track', 'PageView');
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      
+      // Inicializa o Pixel com seu ID
+      fbq('init', '2375128242957578');
+    
+      // Configura a Conversions API
+      fbq('set', 'agent', 'tmgoogletagmanager', '2375128242957578');
+      
+      // Rastreia a visualização da página
+      fbq('track', 'PageView');
+    
+      // Função para enviar eventos para a Conversions API
+      function sendEventToFacebook(eventName, eventData = {}) {
+        // Envia via Pixel (browser)
+        fbq('track', eventName, eventData);
+        
+        // Envia via Conversions API (servidor) - usando seu token
+        fetch('https://graph.facebook.com/v19.0/2375128242957578/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            data: [{
+              event_name: eventName,
+              event_time: Math.floor(Date.now() / 1000),
+              action_source: 'website',
+              event_source_url: window.location.href,
+              user_data: {
+                client_ip_address: '{{client_ip}}',
+                client_user_agent: navigator.userAgent,
+              },
+              custom_data: eventData
+            }],
+            access_token: 'EAAUtfwSqJqsBQosRVtizNfR1SZAcWOQlXZAcujBZC2pSz3fXgNi8t4lVZAg0ZAJA6ZBVZBhWQxCU1I2H0cn5lqlgNDFtRpp2yzROE4WcZCAEP1kTfYfZC51NAGUke01vmUitCHClk3oFOdzVUE7BSp32UKjSjZBagLOPHSZBOlrbignGc8HFn9RR687zqDwMZCKgVjtgJgZDZD'
+          })
+        }).catch(error => console.error('Erro Conversions API:', error));
+      }
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=2375128242957578&ev=PageView&noscript=1"
-    /></noscript>
+    <noscript>
+      <img height="1" width="1" style="display:none" 
+           src="https://www.facebook.com/tr?id=2375128242957578&ev=PageView&noscript=1"/>
+    </noscript>
     <!-- End Meta Pixel Code -->
 
     <style>
@@ -979,10 +1015,18 @@
         // Ano atual no footer
         document.getElementById('year').textContent = new Date().getFullYear();
         
-        // Tracking de cliques
+        // Tracking de cliques (Envia evento 'InitiateCheckout' para o Facebook ao clicar em qualquer botão .btn)
         document.querySelectorAll('.btn').forEach(button => {
             button.addEventListener('click', function() {
-                if(typeof fbq !== 'undefined') {
+                // 1. Envia evento de "Iniciar Checkout" para o Facebook (Pixel + Conversions API)
+                if(typeof sendEventToFacebook !== 'undefined') {
+                    sendEventToFacebook('InitiateCheckout', {
+                        value: 49.99,
+                        currency: 'BRL',
+                        content_name: 'Método ENEM Estratégico'
+                    });
+                } else if(typeof fbq !== 'undefined') {
+                    // Fallback caso a função sendEventToFacebook não esteja disponível
                     fbq('track', 'InitiateCheckout', {
                         value: 49.99,
                         currency: 'BRL',
@@ -990,7 +1034,7 @@
                     });
                 }
                 
-                // Salva o interesse do usuário
+                // 2. Salva o interesse do usuário (seu código original)
                 localStorage.setItem('enem_interest', new Date().toISOString());
             });
         });
@@ -1026,6 +1070,7 @@
         console.log('📚 Módulos: Matriz ENEM (3) + Redação (2) + Organização (1) + TRI + Flash Cards');
         console.log('🎯 Foco: Nova didática baseada em habilidades');
         console.log('💡 Depoimentos atualizados com foco em competências');
+        console.log('📊 Pixel Meta configurado com Conversions API (ID: 2375128242957578)');
     </script>
 </body>
 </html>
